@@ -1,48 +1,40 @@
-Stock Price Prediction
+# Stock Price Prediction
+
 This project leverages machine learning techniques to predict stock prices. The goal is to use historical stock data to forecast future stock prices, helping investors make informed decisions. It uses models such as LSTM (Long Short-Term Memory) to predict the stock prices based on various factors.
 
-Table of Contents
-Project Description
+## Table of Contents
 
-Technologies Used
+- [Project Description](#project-description)
+- [Technologies Used](#technologies-used)
+- [Installation Instructions](#installation-instructions)
+- [Usage](#usage)
+- [File Structure](#file-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
-Installation Instructions
+## Project Description
 
-Usage
+The Stock Price Prediction project uses machine learning algorithms, particularly **LSTM** (Long Short-Term Memory) networks, to forecast the future stock prices of a particular company. The model is trained on historical data obtained from sources like Yahoo Finance and then used to predict future prices.
 
-File Structure
+The app provides a simple interface using **Streamlit** for users to input the stock symbol and date range, and it will display a graph of predicted stock prices along with the model's forecast.
 
-Contributing
+## Technologies Used
 
-License
+- **Python**: Programming language used for the project.
+- **TensorFlow**: Framework used to build and train the LSTM model.
+- **Keras**: High-level API for building neural networks, integrated with TensorFlow.
+- **yfinance**: Used to fetch stock data from Yahoo Finance.
+- **Streamlit**: Used to build an interactive web application.
+- **Matplotlib**: Used to visualize the stock price predictions.
 
-Project Description
-The Stock Price Prediction project uses machine learning algorithms, particularly LSTM (Long Short-Term Memory) networks, to forecast the future stock prices of a particular company. The model is trained on historical data obtained from sources like Yahoo Finance and then used to predict future prices.
+## Installation Instructions
 
-The app provides a simple interface using Streamlit for users to input the stock symbol and date range, and it will display a graph of predicted stock prices along with the model's forecast.
-
-Technologies Used
-Python: Programming language used for the project.
-
-TensorFlow: Framework used to build and train the LSTM model.
-
-Keras: High-level API for building neural networks, integrated with TensorFlow.
-
-yfinance: Used to fetch stock data from Yahoo Finance.
-
-Streamlit: Used to build an interactive web application.
-
-Matplotlib: Used to visualize the stock price predictions.
-
-Installation Instructions
 Follow these steps to set up the project on your local machine:
 
-Clone the repository:
+1. **Clone the repository**:
 
-bash
-Copy
-Edit
-git clone https://github.com/chaitanyakanade2405/stock-price-prediction.git
+   ```bash
+   git clone https://github.com/chaitanyakanade2405/stock-price-prediction.git
 Navigate to the project folder:
 
 bash

@@ -3,3 +3,6 @@ pandas
 yfinance
 matplotlib
 streamlit
+keras
+tensorflow
+scikit-learn

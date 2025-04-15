@@ -9,31 +9,35 @@ from datetime import date
 
 # Configure Streamlit page layout
 st.set_page_config(page_title="Stock Market Predictor", layout="wide")
-
-# App Title
 st.header('Stock Market Predictor')
 
-# Sidebar: User Input
+# Sidebar: Market and Stock Symbol Input
 st.sidebar.header("User Input Parameters")
-stock = st.sidebar.text_input("Enter Stock Symbol", "GOOG")
-# Default dates: start date from 2015 and end date till March 1, 2025
+exchange = st.sidebar.selectbox("Select Stock Exchange", ["NASDAQ/NYSE", "BSE (India)"])
+stock_input = st.sidebar.text_input("Enter Stock Symbol", "GOOG")
+
+# Format the stock symbol
+if exchange == "BSE (India)":
+    stock = f"{stock_input.upper()}.BO"
+    st.sidebar.caption("Examples: RELIANCE, TCS, INFY, HDFCBANK")
+else:
+    stock = stock_input.upper()
+
 start_date = st.sidebar.date_input("Start Date", value=pd.to_datetime("2015-01-01"))
 end_date = st.sidebar.date_input("End Date", value=pd.to_datetime("2025-03-01"))
 
-# Load model (using caching for faster reloads)
+# Load model
 @st.cache_resource
 def load_stock_model():
-    # Use a relative path to the model file for portability
     model_path = "Stock Predictions Model.keras"
     return load_model(model_path)
 
 model = load_stock_model()
 
-# Data fetching with caching (to speed up repeated runs)
+# Fetch stock data
 @st.cache_data
 def get_stock_data(symbol, start, end):
-    data = yf.download(symbol, start=start, end=end)
-    return data
+    return yf.download(symbol, start=start, end=end)
 
 with st.spinner("Fetching data..."):
     data = get_stock_data(stock, start_date, end_date)
@@ -42,29 +46,38 @@ if data.empty:
     st.error("No data fetched. Check the stock symbol or date range.")
     st.stop()
 
+# Optional: Show company name
+@st.cache_data
+def get_stock_info(symbol):
+    ticker = yf.Ticker(symbol)
+    return ticker.info
+
+info = get_stock_info(stock)
+st.write(f"**Company Name:** {info.get('longName', 'N/A')}")
+st.write(f"**Showing data for:** `{stock}`")
+
+# Show data
 st.subheader('Stock Data')
 st.write(data)
 
-# Prepare training and testing data
+# Preprocess data
 train_size = int(len(data) * 0.80)
 data_train = pd.DataFrame(data["Close"].iloc[:train_size])
 data_test = pd.DataFrame(data["Close"].iloc[train_size:])
 
-# Scale data using MinMaxScaler
 scaler = MinMaxScaler(feature_range=(0, 1))
-# Fit on training data
 _ = scaler.fit_transform(data_train)
-# Use the last 100 days of training data as a base for test scaling
+
 past_100_days = data_train.tail(100)
 data_test = pd.concat([past_100_days, data_test], ignore_index=True)
 data_test_scale = scaler.transform(data_test)
 
-# Calculate moving averages for visualization
+# Moving averages
 ma_50 = data["Close"].rolling(window=50).mean()
 ma_100 = data["Close"].rolling(window=100).mean()
 ma_200 = data["Close"].rolling(window=200).mean()
 
-# Plot: Price vs MA50
+# Price vs MA50
 st.subheader('Price vs MA50')
 fig1, ax1 = plt.subplots(figsize=(8, 6))
 ax1.plot(data.index, data["Close"], color="green", label="Close Price")
@@ -74,7 +87,7 @@ ax1.set_ylabel("Price")
 ax1.legend()
 st.pyplot(fig1)
 
-# Plot: Price vs MA50 vs MA100
+# Price vs MA50 vs MA100
 st.subheader('Price vs MA50 vs MA100')
 fig2, ax2 = plt.subplots(figsize=(8, 6))
 ax2.plot(data.index, data["Close"], color="green", label="Close Price")
@@ -85,7 +98,7 @@ ax2.set_ylabel("Price")
 ax2.legend()
 st.pyplot(fig2)
 
-# Plot: Price vs MA100 vs MA200
+# Price vs MA100 vs MA200
 st.subheader('Price vs MA100 vs MA200')
 fig3, ax3 = plt.subplots(figsize=(8, 6))
 ax3.plot(data.index, data["Close"], color="green", label="Close Price")
@@ -96,23 +109,20 @@ ax3.set_ylabel("Price")
 ax3.legend()
 st.pyplot(fig3)
 
-# NEW FEATURE 1: RSI (Relative Strength Index) Calculation and Visualization
+# RSI Calculation
 def calculate_rsi(data, window=14):
     delta = data.diff()
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
-    
     avg_gain = gain.rolling(window=window).mean()
     avg_loss = loss.rolling(window=window).mean()
-    
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-# Calculate RSI
 rsi = calculate_rsi(data["Close"])
 
-# Plot RSI - Fixed version without fill_between
+# RSI Plot
 st.subheader('Relative Strength Index (RSI)')
 fig_rsi, ax_rsi = plt.subplots(figsize=(8, 4))
 ax_rsi.plot(data.index, rsi, color="purple")
@@ -124,7 +134,6 @@ ax_rsi.set_ylim(0, 100)
 ax_rsi.legend()
 st.pyplot(fig_rsi)
 
-# RSI interpretation
 st.write("""
 **RSI Interpretation:**
 - RSI > 70: The stock may be overbought (potential sell signal)
@@ -132,12 +141,12 @@ st.write("""
 - RSI = 50: Neutral market conditions
 """)
 
-# Current RSI value - FIXED
-latest_rsi_value = float(rsi.iloc[-1])  # Convert Series to float
+# Show current RSI
+latest_rsi_value = float(rsi.iloc[-1])
 rsi_status = "Overbought" if latest_rsi_value > 70 else "Oversold" if latest_rsi_value < 30 else "Neutral"
 st.metric("Current RSI", f"{latest_rsi_value:.2f}", delta=rsi_status)
 
-# Prepare data for prediction with a rolling window of 100 days
+# Prepare data for prediction
 x_test = []
 y_test = []
 for i in range(100, data_test_scale.shape[0]):
@@ -145,15 +154,15 @@ for i in range(100, data_test_scale.shape[0]):
     y_test.append(data_test_scale[i, 0])
 x_test, y_test = np.array(x_test), np.array(y_test)
 
-# Generate predictions
+# Make predictions
 predictions = model.predict(x_test)
 
-# Rescale predictions and ground truth values to the original scale
+# Rescale
 scale_factor = 1 / scaler.scale_[0]
 predictions = predictions * scale_factor
 y_test = y_test * scale_factor
 
-# Plot: Original Price vs Predicted Price
+# Price prediction plot
 st.subheader('Original Price vs Predicted Price')
 fig4, ax4 = plt.subplots(figsize=(8, 6))
 ax4.plot(predictions, color="red", label="Predicted Price")
@@ -163,45 +172,28 @@ ax4.set_ylabel("Price")
 ax4.legend()
 st.pyplot(fig4)
 
-# NEW FEATURE 2: Model Performance Metrics
+# Model performance metrics
 def calculate_performance_metrics(y_true, y_pred):
-    # Ensure arrays have the same shape
     min_len = min(len(y_true), len(y_pred))
     y_true = y_true[:min_len]
     y_pred = y_pred[:min_len]
-    
-    # Calculate metrics
     mse = np.mean((y_true - y_pred) ** 2)
     rmse = np.sqrt(mse)
     mae = np.mean(np.abs(y_true - y_pred))
-    
-    # Avoid division by zero
     mape = np.mean(np.abs((y_true - y_pred) / np.maximum(y_true, 0.0001))) * 100
-    
-    # Fix for directional accuracy - handle the dimension issue
     try:
-        # Ensure predictions is a 1D array
         y_pred_flat = y_pred.flatten() if y_pred.ndim > 1 else y_pred
         y_true_flat = y_true.flatten() if y_true.ndim > 1 else y_true
-        
-        # Calculate directional movements
-        if len(y_true_flat) > 1 and len(y_pred_flat) > 1:
-            direction_true = np.sign(np.diff(y_true_flat))
-            direction_pred = np.sign(np.diff(y_pred_flat))
-            
-            # Ensure both have the same length
-            min_dir_len = min(len(direction_true), len(direction_pred))
-            if min_dir_len > 0:
-                matches = (direction_true[:min_dir_len] == direction_pred[:min_dir_len])
-                dir_accuracy = np.mean(matches) * 100
-            else:
-                dir_accuracy = 0.0
+        direction_true = np.sign(np.diff(y_true_flat))
+        direction_pred = np.sign(np.diff(y_pred_flat))
+        min_dir_len = min(len(direction_true), len(direction_pred))
+        if min_dir_len > 0:
+            matches = (direction_true[:min_dir_len] == direction_pred[:min_dir_len])
+            dir_accuracy = np.mean(matches) * 100
         else:
             dir_accuracy = 0.0
-    except Exception as e:
-        st.warning(f"Error calculating directional accuracy: {e}")
+    except:
         dir_accuracy = 0.0
-    
     return {
         "Root Mean Squared Error (RMSE)": f"${rmse:.2f}",
         "Mean Absolute Error (MAE)": f"${mae:.2f}",
@@ -209,15 +201,10 @@ def calculate_performance_metrics(y_true, y_pred):
         "Directional Accuracy": f"{dir_accuracy:.2f}%"
     }
 
-# Debug information
-st.write(f"Debug - y_test shape: {y_test.shape}, dtype: {y_test.dtype}")
-st.write(f"Debug - predictions shape: {predictions.shape}, dtype: {predictions.dtype}")
-
-# Display performance metrics
+# Display metrics
 st.subheader("Model Performance Metrics")
 metrics = calculate_performance_metrics(y_test, predictions)
 
-# Create a nicer display for metrics using columns
 col1, col2 = st.columns(2)
 with col1:
     st.metric("Root Mean Squared Error", metrics["Root Mean Squared Error (RMSE)"])
@@ -226,19 +213,16 @@ with col2:
     st.metric("Mean Absolute Percentage Error", metrics["Mean Absolute Percentage Error (MAPE)"])
     st.metric("Directional Accuracy", metrics["Directional Accuracy"])
 
-# Explanation of metrics
 st.write("""
 **Metrics Explanation:**
 - **RMSE**: The standard deviation of prediction errors (lower is better)
 - **MAE**: Average absolute difference between predicted and actual values (lower is better)
-- **MAPE**: Percentage error, giving sense of error relative to the actual values
-- **Directional Accuracy**: How often the model correctly predicts the direction of price movement (up/down)
+- **MAPE**: Percentage error relative to actual values (lower is better)
+- **Directional Accuracy**: How often the model correctly predicts the price direction (higher is better)
 """)
 
-# Add an evaluation of the model's performance
 avg_mape = float(metrics["Mean Absolute Percentage Error (MAPE)"].replace("%", ""))
 avg_dir_acc = float(metrics["Directional Accuracy"].replace("%", ""))
-
 if avg_dir_acc > 60:
     model_evaluation = "Good directional prediction capability"
 elif avg_dir_acc > 50:

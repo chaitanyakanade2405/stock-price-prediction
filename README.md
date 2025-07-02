@@ -1,107 +1,52 @@
-# Stock Price Prediction
+# 📈 Stock Price Prediction
 
-This project leverages machine learning techniques to predict stock prices. The goal is to use historical stock data to forecast future stock prices, helping investors make informed decisions. It uses models such as LSTM (Long Short-Term Memory) to predict the stock prices based on various factors.
+A machine learning project that predicts stock prices using historical data and an LSTM (Long Short-Term Memory) neural network. This repository includes a trained `.keras` model and a runnable `app.py` script for making predictions.
 
-## Table of Contents
+---
 
-- [Project Description](#project-description)
-- [Technologies Used](#technologies-used)
-- [Installation Instructions](#installation-instructions)
-- [Usage](#usage)
-- [File Structure](#file-structure)
-- [Contributing](#contributing)
-- [License](#license)
+## 🧠 Features
 
-## Project Description
+- Predicts future stock closing prices using past trends.
+- Uses LSTM (deep learning) for time-series forecasting.
+- Easily extendable for multiple stock datasets.
+- Modular code in `app.py` for training, preprocessing, and prediction.
 
-The Stock Price Prediction project uses machine learning algorithms, particularly **LSTM** (Long Short-Term Memory) networks, to forecast the future stock prices of a particular company. The model is trained on historical data obtained from sources like Yahoo Finance and then used to predict future prices.
+---
 
-The app provides a simple interface using **Streamlit** for users to input the stock symbol and date range, and it will display a graph of predicted stock prices along with the model's forecast.
+## 📁 Project Structure
 
-## Technologies Used
+stock-price-prediction/
+│
+├── .devcontainer/ # Dev container setup (optional)
+├── venv/ # Virtual environment (not tracked in Git)
+├── app.py # Main application script
+├── requirements.txt # Python dependencies
+├── Stock Predictions Model.keras # Trained LSTM model
+└── README.md # Project documentation
 
-- **Python**: Programming language used for the project.
-- **TensorFlow**: Framework used to build and train the LSTM model.
-- **Keras**: High-level API for building neural networks, integrated with TensorFlow.
-- **yfinance**: Used to fetch stock data from Yahoo Finance.
-- **Streamlit**: Used to build an interactive web application.
-- **Matplotlib**: Used to visualize the stock price predictions.
+## ⚙️ Setup Instructions
 
-## Installation Instructions
+### 1. Clone the Repository
 
-Follow these steps to set up the project on your local machine:
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/chaitanyakanade2405/stock-price-prediction.git
-Navigate to the project folder:
-
-bash
-Copy
-Edit
+```bash
+git clone https://github.com/chaitanyakanade2405/stock-price-prediction.git
 cd stock-price-prediction
-Create and activate a virtual environment:
-
-On Windows:
-
+2. Create and Activate a Virtual Environment (Optional)
 bash
 Copy
 Edit
 python -m venv venv
-venv\Scripts\activate
-On Mac/Linux:
-
-bash
-Copy
-Edit
-python3 -m venv venv
-source venv/bin/activate
-Install the required libraries:
-
-bash
-Copy
-Edit
+source venv/bin/activate       # On Linux/macOS
+venv\Scripts\activate          # On Windows
+3. Install Dependencies
 pip install -r requirements.txt
-This will install all necessary dependencies, including TensorFlow, Keras, yfinance, Streamlit, Matplotlib, and others.
 
-Usage
-After the installation, you can run the Streamlit app with the following command:
+🚀 How to Run
+Run the prediction script:
+python app.py
+Make sure the required stock dataset or input handling is properly configured inside app.py. You can modify it to load a different CSV file or fetch live data.
 
-bash
-Copy
-Edit
-streamlit run app.py
-The app will open in your default browser, where you can interact with it by providing the stock symbol and date range.
+🤝 Contributing
+Contributions and suggestions are welcome!
 
-You will see a graph showing the historical stock prices along with the predicted stock prices.
 
-File Structure
-Here’s an overview of the file structure:
-
-bash
-Copy
-Edit
-stock-price-prediction/
-│
-├── app.py                  # Main file to run the Streamlit app
-├── Stock Predictions Model.keras  # Pre-trained model file
-├── requirements.txt        # File containing required libraries
-├── data/                   # Folder containing datasets (if any)
-├── images/                 # Folder for any images (e.g., logo, etc.)
-└── README.md               # This file
-Contributing
-If you wish to contribute to this project, feel free to fork the repository, make changes, and submit a pull request. All contributions are welcome!
-
-Steps for contributing:
-Fork the repository.
-
-Create a new branch (git checkout -b feature-name).
-
-Make your changes.
-
-Commit your changes (git commit -am 'Add new feature').
-
-Push to your branch (git push origin feature-name).
-
-Open a pull request on GitHub.

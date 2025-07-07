@@ -8,8 +8,8 @@ from sklearn.preprocessing import MinMaxScaler
 from datetime import date
 
 # Configure Streamlit page layout
-st.set_page_config(page_title="Stock Market Predictor", layout="wide")
-st.header('Stock Market Predictor')
+st.set_page_config(page_title="Stock Price Predictor", layout="wide")
+st.header('Stock Price Predictor')
 
 # Sidebar: Market and Stock Symbol Input
 st.sidebar.header("User Input Parameters")
@@ -34,23 +34,32 @@ def load_stock_model():
 
 model = load_stock_model()
 
-# Fetch stock data
+# Fetch stock data with error handling
 @st.cache_data
 def get_stock_data(symbol, start, end):
-    return yf.download(symbol, start=start, end=end)
+    try:
+        df = yf.download(symbol, start=start, end=end, progress=False)
+        return df
+    except Exception as e:
+        st.error(f"Error fetching data: {e}")
+        return pd.DataFrame()
 
 with st.spinner("Fetching data..."):
     data = get_stock_data(stock, start_date, end_date)
 
-if data.empty:
-    st.error("No data fetched. Check the stock symbol or date range.")
+if data.empty or 'error' in str(data).lower():
+    st.error("⚠️ No data fetched. This may be due to an invalid symbol, wrong date range, or Yahoo Finance rate limiting. Try again after a few minutes.")
     st.stop()
 
-# Optional: Show company name
+# Optional: Show company name safely
 @st.cache_data
 def get_stock_info(symbol):
-    ticker = yf.Ticker(symbol)
-    return ticker.info
+    try:
+        ticker = yf.Ticker(symbol)
+        return ticker.info
+    except Exception as e:
+        st.warning(f"Could not retrieve stock info: {e}")
+        return {}
 
 info = get_stock_info(stock)
 st.write(f"**Company Name:** {info.get('longName', 'N/A')}")
